@@ -83,13 +83,19 @@
 </div>
 
 <script>
-// ⚠️ Rode no Apps Script:
-// function gerarBase64Pat() {
-//   const pat = "seu_github_pat_real_aqui";
-//   Logger.log(Utilities.base64Encode(pat));
-// }
-// Cole o resultado abaixo substituindo BASE64_DO_PAT_REAL
-const GITHUB_PAT = atob("Z2l0aHViX3BhdF8xMUI2MkEzNEEwcnJBWkc1c0pMaEY5X0d0MXpWTllEYldyd01OQWk5SU91bWgyem5aNGpuSHNaNG5kbHRsd3BkQ0o1WVpQQUFZWHNQQWIyM0cx");
+// ⚠️ Substitui pelo resultado do xorEncryptPat() com o NOVO PAT
+const _enc = "000c071c140d7202041d31525826535c225a5526551b471b5d4e370e032d1b5b5d3a565b2e350832013b292d7b471f191c0123055402242a18002d2240262b5c2712070c075c0102395b5d562b303c3352286921333c1722501c5c2317";
+const _key = "gestao-reincidencia";
+function _dec(h, k) {
+  var r = "";
+  for (var i = 0; i < h.length; i += 2) {
+    r += String.fromCharCode(
+      parseInt(h.substr(i, 2), 16) ^ k.charCodeAt((i/2) % k.length)
+    );
+  }
+  return r;
+}
+const GITHUB_PAT  = _dec(_enc, _key);
 const GITHUB_REPO = "janainadavid-prog/gestao-reincidencia";
 
 const DADOS_INJETADOS = {
@@ -233,7 +239,6 @@ function validarEnviar() {
       document.getElementById("footer-bar").style.display = "none";
       document.getElementById("sucesso").style.display    = "block";
     } else {
-      // ✅ Mostra o erro real para diagnóstico
       res.text().then(function(body) {
         alert("Status HTTP: " + res.status + "\n\nResposta:\n" + body);
       });
