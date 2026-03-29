@@ -177,54 +177,49 @@ function lerDados() {
 // ✅ RENDERIZA O FORMULÁRIO (ou telas especiais)
 // =============================================
 function renderizarFormulario(dados) {
-  // Atualiza header
   document.getElementById("hdr-supervisor").textContent =
     firstNameFromEmailOrName((dados && dados.supervisor) || '') || '—';
   document.getElementById("hdr-mes").textContent =
     (dados && dados.mes) || '—';
 
-  // Sem dados no link
   if (!dados) {
     document.getElementById("hdr-pendencias").textContent = '0';
     document.getElementById("conteudo").innerHTML =
-      '<div class="tela-central">' +
-      '<div class="icon">⚠️</div>' +
+      '<div class="tela-central"><div class="icon">⚠️</div>' +
       '<h2>Link inválido</h2>' +
-      '<p>Este link não contém dados válidos.<br/>Solicite um novo envio ao responsável.</p>' +
-      '</div>';
+      '<p>Solicite um novo envio ao responsável.</p></div>';
     return;
   }
 
-  // ✅ Supervisor já respondeu
   if (dados._jaRespondido) {
     document.getElementById("hdr-pendencias").textContent = '0';
     document.getElementById("conteudo").innerHTML =
-      '<div class="tela-central">' +
-      '<div class="icon">✅</div>' +
+      '<div class="tela-central"><div class="icon">✅</div>' +
       '<h2>Sem pendências!</h2>' +
       '<p>Você já registrou suas ações para este mês.<br/>' +
-      'Obrigado pela participação!</p>' +
-      '</div>';
+      'Obrigado pela participação!</p></div>';
     return;
   }
 
-  // Formulário normal
-  document.getElementById("hdr-pendencias").textContent = dados.agentes.length;
-  document.getElementById("footer-total").textContent   = dados.agentes.length;
-  document.getElementById("footer-bar").style.display   = "flex";
-
   var grupos = {};
   dados.agentes.forEach(function(a) {
-    if (!grupos[a.indicador]) grupos[a.indicador] = [];
-    grupos[a.indicador].push(a);
+    var ind = a.indicador;
+    // ✅ Garante que agentes com indicador inválido vão para MÚLTIPLOS
+    if (!ind || ["CSAT","QUALIDADE","SCORE IVY","MÚLTIPLOS"].indexOf(ind) < 0) {
+      ind = 'MÚLTIPLOS';
+    }
+    if (!grupos[ind]) grupos[ind] = [];
+    grupos[ind].push(a);
   });
 
   var ordemGrupos = ["CSAT","QUALIDADE","SCORE IVY","MÚLTIPLOS"];
   var classGrupo  = { "CSAT":"csat","QUALIDADE":"qualidade","SCORE IVY":"score","MÚLTIPLOS":"multiplos" };
   var html = "";
+  var totalExibidos = 0;
 
   ordemGrupos.forEach(function(indicador) {
     if (!grupos[indicador]) return;
+    totalExibidos += grupos[indicador].length;
     var agentes = grupos[indicador];
     var cls = classGrupo[indicador] || "csat";
     html += '<div class="grupo"><div class="grupo-header ' + cls + '">' + indicador + ' (' + agentes.length + ')</div>';
@@ -247,9 +242,14 @@ function renderizarFormulario(dados) {
   });
 
   document.getElementById("conteudo").innerHTML = html;
+
+  // ✅ Atualiza badge com total real exibido
+  document.getElementById("hdr-pendencias").textContent = totalExibidos;
+  document.getElementById("footer-total").textContent   = totalExibidos;
+  document.getElementById("footer-bar").style.display   = "flex";
+
   atualizarContador();
 }
-
 // =============================================
 // CONTADOR DE PROGRESSO
 // =============================================
@@ -285,7 +285,7 @@ function validarEnviar() {
 
   var selections = DADOS_INJETADOS.agentes.map(function(ag) {
     var sel    = document.getElementById("acao-" + ag.username);
-    var acaoId = parseInt(sel.value);
+    var acaoId = sel ? parseInt(sel.value) : 0;
     var acao   = ACOES.find(function(a) { return a.id === acaoId; });
     return {
       username: ag.username, nome: ag.nome, celula: ag.celula,
@@ -303,6 +303,13 @@ function validarEnviar() {
     selections:    selections
   };
 
+  // ✅ Timeout de 15 segundos para não ficar travado
+  var timeoutId = setTimeout(function() {
+    btn.textContent = "Enviar final";
+    btn.disabled    = false;
+    alert("Tempo limite esgotado. Verifique sua conexão e tente novamente.");
+  }, 15000);
+
   fetch("https://api.github.com/repos/" + GITHUB_REPO + "/dispatches", {
     method: "POST",
     headers: {
@@ -313,39 +320,43 @@ function validarEnviar() {
     body: JSON.stringify({ event_type: "reincidencia_submission", client_payload: payload })
   })
   .then(function(res) {
+    clearTimeout(timeoutId);
+
     if (res.status === 204) {
+      // ✅ Salva token no localStorage
+      try {
+        var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
+        tokensUsados.push(DADOS_INJETADOS.token);
+        localStorage.setItem('reincidencia_tokens', JSON.stringify(tokensUsados));
+      } catch(e) { /* ignora erros de localStorage */ }
 
-      // ✅ Salva token no localStorage — bloqueia segunda submissão
-      var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
-      tokensUsados.push(DADOS_INJETADOS.token);
-      localStorage.setItem('reincidencia_tokens', JSON.stringify(tokensUsados));
-
-      // Mostra tela de sucesso
       document.getElementById("conteudo").innerHTML =
-        '<div class="tela-central">' +
-        '<div class="icon">✅</div>' +
+        '<div class="tela-central"><div class="icon">✅</div>' +
         '<h2>Enviado com sucesso!</h2>' +
-        '<p>Suas respostas foram registradas para ' + DADOS_INJETADOS.mes + '.<br/>' +
-        'Você já pode fechar esta página.</p>' +
-        '</div>';
+        '<p>Suas respostas foram registradas para ' + (DADOS_INJETADOS.mes || '') + '.<br/>' +
+        'Você já pode fechar esta página.</p></div>';
       document.getElementById("footer-bar").style.display = "none";
       document.getElementById("alerta").style.display     = "none";
 
     } else {
-      res.text().then(function(body) {
-        alert("Status HTTP: " + res.status + "\n" + body);
-      });
+      // ✅ Mostra o erro real
       btn.textContent = "Enviar final";
       btn.disabled    = false;
+      res.text().then(function(body) {
+        alert("Erro ao enviar (HTTP " + res.status + "):\n" + body.substring(0, 300) +
+              "\n\nSe o erro for 401, o token expirou. Contate o suporte.");
+      }).catch(function() {
+        alert("Erro HTTP " + res.status + ". Tente novamente ou contate o suporte.");
+      });
     }
   })
   .catch(function(err) {
+    clearTimeout(timeoutId);
     btn.textContent = "Enviar final";
     btn.disabled    = false;
     alert("Erro de conexão: " + err.message);
   });
 }
-
 // =============================================
 // INICIALIZAÇÃO
 // =============================================
