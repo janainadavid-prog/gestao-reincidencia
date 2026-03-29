@@ -132,23 +132,34 @@ function firstNameFromEmailOrName(s) {
 // ✅ LÊ DADOS DO HASH + VERIFICA SE JÁ RESPONDEU
 // =============================================
 function lerDados() {
-  var hash = window.location.hash.replace('#', '');
-  if (!hash) return null;
+  // ✅ Lê do parâmetro URL (mais confiável que hash em e-mails)
+  var urlParams = new URLSearchParams(window.location.search);
+  var encoded   = urlParams.get('d') || window.location.hash.replace('#', '');
+
+  if (!encoded) return null;
 
   try {
-    // ✅ Converte URL-safe base64 para base64 padrão antes do atob()
-    var standard = hash
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
+    // Converte URL-safe base64 para base64 padrão
+    var standard = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    while (standard.length % 4 !== 0) { standard += '='; }
 
-    // Adiciona padding se necessário
-    while (standard.length % 4 !== 0) {
-      standard += '=';
+    // ✅ Decodifica com suporte a UTF-8 (nomes com ã, ç, ê, etc.)
+    var binaryStr = atob(standard);
+    var text;
+    try {
+      var bytes = new Uint8Array(binaryStr.length);
+      for (var i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      text = new TextDecoder('utf-8').decode(bytes);
+    } catch(e) {
+      // Fallback para navegadores antigos
+      text = decodeURIComponent(escape(binaryStr));
     }
 
-    var dados = JSON.parse(atob(standard));
+    var dados = JSON.parse(text);
 
-    // Verifica localStorage — já respondeu?
+    // ✅ Verifica se já respondeu (localStorage)
     var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
     if (tokensUsados.indexOf(dados.token) >= 0) {
       return { _jaRespondido: true, supervisor: dados.supervisor, mes: dados.mes };
@@ -157,7 +168,7 @@ function lerDados() {
     return dados;
 
   } catch(e) {
-    console.error('Erro ao decodificar dados:', e);
+    console.error('Erro:', e);
     return null;
   }
 }
