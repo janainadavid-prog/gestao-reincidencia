@@ -1,0 +1,54 @@
+{
+  "campanha_id": "2026-03",
+  "mes": "03/2026",
+  "respondido_em": "29/03/2026, 20:46:29",
+  "selections": [
+    {
+      "acao_id": 2,
+      "acao_nome": "DESLIGAMENTO",
+      "celula": "Px Chat | Chat | Restaurante",
+      "classificacao": "SCORE IVY",
+      "indicador": "SCORE IVY",
+      "nome": "Abinaecia Da Silva Araujo",
+      "username": "6032143473"
+    },
+    {
+      "acao_id": 6,
+      "acao_nome": "REALOCAR PARA OUTRA FORA DO PRODUTO IFOOD",
+      "celula": "CX | Chat | P?s Entrega",
+      "classificacao": "SCORE IVY | QUALIDADE",
+      "indicador": "M?LTIPLOS",
+      "nome": "Abinael Leite Dos Santos",
+      "username": "9515590442"
+    },
+    {
+      "acao_id": 8,
+      "acao_nome": "LICENÇA MÉDICA | FÉRIAS | SALÁRIO FUNÇÃO",
+      "celula": "CX | Chat | Problemas com entrega",
+      "classificacao": "CSAT | SCORE IVY",
+      "indicador": "M?LTIPLOS",
+      "nome": "Acrisio Mikael Barbosa Silva",
+      "username": "14069502467"
+    },
+    {
+      "acao_id": 2,
+      "acao_nome": "DESLIGAMENTO",
+      "celula": "CX | Chat | P?s Entrega",
+      "classificacao": "CSAT",
+      "indicador": "CSAT",
+      "nome": "Acsa Maria De Souza Filgueira",
+      "username": "11121022480"
+    },
+    {
+      "acao_id": 3,
+      "acao_nome": "FEEDBACK COM ACOMPANHAMENTO",
+      "celula": "Reputacao | RA | Px",
+      "classificacao": "QUALIDADE",
+      "indicador": "QUALIDADE",
+      "nome": "Acssa Camilly De Sousa Silva",
+      "username": "13884762400"
+    }
+  ],
+  "supervisor": "janedanjos@gmail.com",
+  "token": "eyJzdXBlcnZpc29yIjoiamFuZWRhbmpvc0BnbWFpbC5jb20iLCJlbWFpbCI6ImphbmVkYW5qb3NAZ21haWwuY29tIiwiY2FtcGFuaGFfaWQiOiIyMDI2LTAzIiwiZXhwIjoxNzc1NDMyNzU5OTA0fQ==.3Tm1I-Le4I5gN8MBF2PQlzKt5qjknBh9itu-nSAKZUQ="
+}
