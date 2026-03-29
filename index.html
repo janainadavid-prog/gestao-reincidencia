@@ -47,6 +47,10 @@
     .btn-enviar:disabled { background: #97a0af; cursor: not-allowed; }
     .alerta { display: none; background: #FFEBE6; border: 1.5px solid #FF5630; border-radius: 6px; padding: 10px 16px; font-size: 13px; color: #BF2600; margin: 8px 32px; }
     .alerta.show { display: block; }
+    .tela-central { text-align: center; padding: 80px 20px; }
+    .tela-central .icon { font-size: 72px; margin-bottom: 24px; }
+    .tela-central h2 { font-size: 24px; color: #172b4d; margin-bottom: 12px; }
+    .tela-central p { font-size: 15px; color: #5e6c84; line-height: 1.8; max-width: 460px; margin: 0 auto; }
   </style>
 </head>
 <body>
@@ -65,17 +69,9 @@
 
 <div class="container" id="conteudo"></div>
 
-<div id="sucesso" style="display:none;text-align:center;padding:80px 20px">
-  <div style="font-size:72px;margin-bottom:24px">✅</div>
-  <h2 style="color:#172b4d;font-size:24px;margin-bottom:12px">Enviado com sucesso!</h2>
-  <p style="color:#5e6c84;font-size:15px;line-height:1.8;max-width:460px;margin:0 auto">
-    Suas respostas foram registradas.<br/>Você já pode fechar esta página.
-  </p>
-</div>
-
 <div class="alerta" id="alerta">⚠️ Selecione uma ação para todos os agentes antes de enviar.</div>
 
-<div class="footer" id="footer-bar">
+<div class="footer" id="footer-bar" style="display:none">
   <div class="footer-info">
     <span id="footer-preenchidos">0</span> de <span id="footer-total">0</span> agentes preenchidos
   </div>
@@ -83,34 +79,20 @@
 </div>
 
 <script>
-// ⚠️ Substitui pelo resultado do xorEncryptPat() com o NOVO PAT
+// =============================================
+// PAT encriptado com XOR
+// =============================================
 const _enc = "000c071c140d7202041d31525826535c225a5526551b471b5d4e370e032d1b5b5d3a565b2e350832013b292d7b471f191c0123055402242a18002d2240262b5c2712070c075c0102395b5d562b303c3352286921333c1722501c5c2317";
 const _key = "gestao-reincidencia";
 function _dec(h, k) {
   var r = "";
   for (var i = 0; i < h.length; i += 2) {
-    r += String.fromCharCode(
-      parseInt(h.substr(i, 2), 16) ^ k.charCodeAt((i/2) % k.length)
-    );
+    r += String.fromCharCode(parseInt(h.substr(i, 2), 16) ^ k.charCodeAt((i/2) % k.length));
   }
   return r;
 }
 const GITHUB_PAT  = _dec(_enc, _key);
 const GITHUB_REPO = "janainadavid-prog/gestao-reincidencia";
-
-const DADOS_INJETADOS = {
-  supervisor:  "janaina.david@ifood.com.br",
-  mes:         "03/2026",
-  campanha_id: "2026-03",
-  token:       "teste-token-123",
-  agentes: [
-    { username: "ana.silva",    nome: "Ana Silva",    celula: "CX | Chat | Pedidos",     indicador: "CSAT",      classificacao: "2M",  metrica: "68%" },
-    { username: "joao.lima",    nome: "João Lima",    celula: "CX | Voz | Pedidos",      indicador: "QUALIDADE", classificacao: "3M",  metrica: "71%" },
-    { username: "pedro.santos", nome: "Pedro Santos", celula: "CX | Chat | Pós Entrega", indicador: "SCORE IVY", classificacao: "2M",  metrica: "64"  },
-    { username: "maria.costa",  nome: "Maria Costa",  celula: "CX | Voz | Pós Entrega",  indicador: "MÚLTIPLOS", classificacao: "3M+", metrica: "—"   },
-    { username: "carlos.souza", nome: "Carlos Souza", celula: "CX | Chat | Pedidos",     indicador: "MÚLTIPLOS", classificacao: "3M",  metrica: "—"   }
-  ]
-};
 
 const ACOES = [
   { id: 0, nome: "— Selecione —" },
@@ -125,6 +107,11 @@ const ACOES = [
   { id: 9, nome: "AGENTE NÃO É REINCIDENTE ( ABERTURA DE CHAMADO)" }
 ];
 
+var DADOS_INJETADOS = null;
+
+// =============================================
+// HELPERS
+// =============================================
 function capitalizeFirst(s) {
   var t = (s || '').toString().trim();
   return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : '';
@@ -141,11 +128,68 @@ function firstNameFromEmailOrName(s) {
   return capitalizeFirst(v.split(/\s+/)[0] || v);
 }
 
+// =============================================
+// ✅ LÊ DADOS DO HASH + VERIFICA SE JÁ RESPONDEU
+// =============================================
+function lerDados() {
+  var hash = window.location.hash.replace('#', '');
+  if (!hash) return null;
+
+  try {
+    var dados = JSON.parse(atob(hash));
+
+    // Verifica localStorage — já respondeu?
+    var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
+    if (tokensUsados.indexOf(dados.token) >= 0) {
+      return { _jaRespondido: true, supervisor: dados.supervisor, mes: dados.mes };
+    }
+
+    return dados;
+  } catch(e) {
+    console.error('Erro ao decodificar dados:', e);
+    return null;
+  }
+}
+
+// =============================================
+// ✅ RENDERIZA O FORMULÁRIO (ou telas especiais)
+// =============================================
 function renderizarFormulario(dados) {
-  document.getElementById("hdr-supervisor").textContent = firstNameFromEmailOrName(dados.supervisor) || dados.supervisor;
-  document.getElementById("hdr-mes").textContent        = dados.mes;
+  // Atualiza header
+  document.getElementById("hdr-supervisor").textContent =
+    firstNameFromEmailOrName((dados && dados.supervisor) || '') || '—';
+  document.getElementById("hdr-mes").textContent =
+    (dados && dados.mes) || '—';
+
+  // Sem dados no link
+  if (!dados) {
+    document.getElementById("hdr-pendencias").textContent = '0';
+    document.getElementById("conteudo").innerHTML =
+      '<div class="tela-central">' +
+      '<div class="icon">⚠️</div>' +
+      '<h2>Link inválido</h2>' +
+      '<p>Este link não contém dados válidos.<br/>Solicite um novo envio ao responsável.</p>' +
+      '</div>';
+    return;
+  }
+
+  // ✅ Supervisor já respondeu
+  if (dados._jaRespondido) {
+    document.getElementById("hdr-pendencias").textContent = '0';
+    document.getElementById("conteudo").innerHTML =
+      '<div class="tela-central">' +
+      '<div class="icon">✅</div>' +
+      '<h2>Sem pendências!</h2>' +
+      '<p>Você já registrou suas ações para este mês.<br/>' +
+      'Obrigado pela participação!</p>' +
+      '</div>';
+    return;
+  }
+
+  // Formulário normal
   document.getElementById("hdr-pendencias").textContent = dados.agentes.length;
   document.getElementById("footer-total").textContent   = dados.agentes.length;
+  document.getElementById("footer-bar").style.display   = "flex";
 
   var grupos = {};
   dados.agentes.forEach(function(a) {
@@ -165,6 +209,7 @@ function renderizarFormulario(dados) {
     html += '<table><thead><tr><th>ANALISTA</th><th>CÉLULA</th><th>INDICADOR REINCIDENTE</th>';
     html += '<th>' + (indicador === "MÚLTIPLOS" ? "INDICADORES" : indicador) + '</th>';
     html += '<th style="min-width:300px">AÇÃO</th></tr></thead><tbody>';
+
     agentes.forEach(function(ag) {
       var tagClass     = ag.classificacao === "2M" ? "tag-2m" : ag.classificacao === "3M+" ? "tag-3m2" : "tag-3m";
       var val          = parseFloat(ag.metrica);
@@ -183,6 +228,9 @@ function renderizarFormulario(dados) {
   atualizarContador();
 }
 
+// =============================================
+// CONTADOR DE PROGRESSO
+// =============================================
 function atualizarContador() {
   var selects = document.querySelectorAll(".select-acao");
   var prench  = 0;
@@ -191,6 +239,9 @@ function atualizarContador() {
   document.getElementById("btn-enviar").disabled = prench < selects.length;
 }
 
+// =============================================
+// ✅ VALIDAÇÃO E ENVIO (com localStorage)
+// =============================================
 function validarEnviar() {
   var selects = document.querySelectorAll(".select-acao");
   var valido  = true;
@@ -198,6 +249,7 @@ function validarEnviar() {
     s.classList.toggle("invalido", s.value === "0");
     if (s.value === "0") valido = false;
   });
+
   if (!valido) {
     var al = document.getElementById("alerta");
     al.classList.add("show");
@@ -213,34 +265,53 @@ function validarEnviar() {
     var sel    = document.getElementById("acao-" + ag.username);
     var acaoId = parseInt(sel.value);
     var acao   = ACOES.find(function(a) { return a.id === acaoId; });
-    return { username: ag.username, nome: ag.nome, celula: ag.celula,
-             indicador: ag.indicador, classificacao: ag.classificacao,
-             acao_id: acaoId, acao_nome: acao ? acao.nome : "" };
+    return {
+      username: ag.username, nome: ag.nome, celula: ag.celula,
+      indicador: ag.indicador, classificacao: ag.classificacao,
+      acao_id: acaoId, acao_nome: acao ? acao.nome : ""
+    };
   });
 
   var payload = {
-    token: DADOS_INJETADOS.token, supervisor: DADOS_INJETADOS.supervisor,
-    campanha_id: DADOS_INJETADOS.campanha_id, mes: DADOS_INJETADOS.mes,
-    respondido_em: new Date().toLocaleString("pt-BR"), selections: selections
+    token:         DADOS_INJETADOS.token,
+    supervisor:    DADOS_INJETADOS.supervisor,
+    campanha_id:   DADOS_INJETADOS.campanha_id,
+    mes:           DADOS_INJETADOS.mes,
+    respondido_em: new Date().toLocaleString("pt-BR"),
+    selections:    selections
   };
 
   fetch("https://api.github.com/repos/" + GITHUB_REPO + "/dispatches", {
     method: "POST",
     headers: {
       "Authorization": "token " + GITHUB_PAT,
-      "Accept": "application/vnd.github.v3+json",
-      "Content-Type": "application/json"
+      "Accept":        "application/vnd.github.v3+json",
+      "Content-Type":  "application/json"
     },
     body: JSON.stringify({ event_type: "reincidencia_submission", client_payload: payload })
   })
   .then(function(res) {
     if (res.status === 204) {
-      document.getElementById("conteudo").style.display   = "none";
+
+      // ✅ Salva token no localStorage — bloqueia segunda submissão
+      var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
+      tokensUsados.push(DADOS_INJETADOS.token);
+      localStorage.setItem('reincidencia_tokens', JSON.stringify(tokensUsados));
+
+      // Mostra tela de sucesso
+      document.getElementById("conteudo").innerHTML =
+        '<div class="tela-central">' +
+        '<div class="icon">✅</div>' +
+        '<h2>Enviado com sucesso!</h2>' +
+        '<p>Suas respostas foram registradas para ' + DADOS_INJETADOS.mes + '.<br/>' +
+        'Você já pode fechar esta página.</p>' +
+        '</div>';
       document.getElementById("footer-bar").style.display = "none";
-      document.getElementById("sucesso").style.display    = "block";
+      document.getElementById("alerta").style.display     = "none";
+
     } else {
       res.text().then(function(body) {
-        alert("Status HTTP: " + res.status + "\n\nResposta:\n" + body);
+        alert("Status HTTP: " + res.status + "\n" + body);
       });
       btn.textContent = "Enviar final";
       btn.disabled    = false;
@@ -253,7 +324,13 @@ function validarEnviar() {
   });
 }
 
-window.onload = function() { renderizarFormulario(DADOS_INJETADOS); };
+// =============================================
+// INICIALIZAÇÃO
+// =============================================
+window.onload = function() {
+  DADOS_INJETADOS = lerDados();
+  renderizarFormulario(DADOS_INJETADOS);
+};
 </script>
 </body>
 </html>
