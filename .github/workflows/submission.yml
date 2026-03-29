@@ -7,11 +7,20 @@ on:
 jobs:
   processar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Log da submissão
+      - uses: actions/checkout@v4
+
+      - name: Salvar submissão como JSON
         run: |
-          echo "Supervisor: ${{ github.event.client_payload.supervisor }}"
-          echo "Campanha: ${{ github.event.client_payload.campanha_id }}"
-          echo "Total agentes: ${{ github.event.client_payload.selections.length }}"
-          echo "Payload completo:"
-          echo '${{ toJson(github.event.client_payload) }}'
+          mkdir -p submissions
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          SUPERVISOR=$(echo '${{ github.event.client_payload.supervisor }}' | tr '@.' '_')
+          FILENAME="submissions/${TIMESTAMP}_${SUPERVISOR}.json"
+          echo '${{ toJson(github.event.client_payload) }}' > "$FILENAME"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Submissão: $FILENAME [skip ci]"
+          git push
