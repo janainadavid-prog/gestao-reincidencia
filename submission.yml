@@ -1,0 +1,17 @@
+name: Processar Submissão
+
+on:
+  repository_dispatch:
+    types: [reincidencia_submission]
+
+jobs:
+  processar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log da submissão
+        run: |
+          echo "Supervisor: ${{ github.event.client_payload.supervisor }}"
+          echo "Campanha: ${{ github.event.client_payload.campanha_id }}"
+          echo "Total agentes: ${{ github.event.client_payload.selections.length }}"
+          echo "Payload completo:"
+          echo '${{ toJson(github.event.client_payload) }}'
