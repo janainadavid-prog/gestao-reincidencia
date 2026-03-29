@@ -83,7 +83,13 @@
 </div>
 
 <script>
-const GITHUB_PAT  = atob("Q09MRV9TRVVfTk9WT19QQVRfQVFVSQ==");
+// ⚠️ Rode no Apps Script:
+// function gerarBase64Pat() {
+//   const pat = "seu_github_pat_real_aqui";
+//   Logger.log(Utilities.base64Encode(pat));
+// }
+// Cole o resultado abaixo substituindo BASE64_DO_PAT_REAL
+const GITHUB_PAT = atob("Z2l0aHViX3BhdF8xMUI2MkEzNEEwcnJBWkc1c0pMaEY5X0d0MXpWTllEYldyd01OQWk5SU91bWgyem5aNGpuSHNaNG5kbHRsd3BkQ0o1WVpQQUFZWHNQQWIyM0cx");
 const GITHUB_REPO = "janainadavid-prog/gestao-reincidencia";
 
 const DADOS_INJETADOS = {
@@ -227,13 +233,18 @@ function validarEnviar() {
       document.getElementById("footer-bar").style.display = "none";
       document.getElementById("sucesso").style.display    = "block";
     } else {
-      throw new Error("Status: " + res.status);
+      // ✅ Mostra o erro real para diagnóstico
+      res.text().then(function(body) {
+        alert("Status HTTP: " + res.status + "\n\nResposta:\n" + body);
+      });
+      btn.textContent = "Enviar final";
+      btn.disabled    = false;
     }
   })
-  .catch(function() {
+  .catch(function(err) {
     btn.textContent = "Enviar final";
     btn.disabled    = false;
-    alert("Erro ao enviar. Tente novamente.");
+    alert("Erro de conexão: " + err.message);
   });
 }
 
