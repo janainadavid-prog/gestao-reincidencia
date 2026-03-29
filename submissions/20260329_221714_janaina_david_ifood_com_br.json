@@ -1,0 +1,54 @@
+{
+  "campanha_id": "2026-03",
+  "mes": "03/2026",
+  "respondido_em": "29/03/2026, 19:17:06",
+  "selections": [
+    {
+      "acao_id": 1,
+      "acao_nome": "ACOMPANHAMENTO PRESENCIAL SUPERVISOR - CANCELAMENTO DE H.O",
+      "celula": "CX | Chat | Pedidos",
+      "classificacao": "2M",
+      "indicador": "CSAT",
+      "nome": "Ana Silva",
+      "username": "ana.silva"
+    },
+    {
+      "acao_id": 4,
+      "acao_nome": "MOVIMENTAÇÃO INTERNA/PROMOÇÃO",
+      "celula": "CX | Voz | Pedidos",
+      "classificacao": "3M",
+      "indicador": "QUALIDADE",
+      "nome": "João Lima",
+      "username": "joao.lima"
+    },
+    {
+      "acao_id": 5,
+      "acao_nome": "REALOCAR PARA OUTRA CÉLULA IFOOD",
+      "celula": "CX | Chat | Pós Entrega",
+      "classificacao": "2M",
+      "indicador": "SCORE IVY",
+      "nome": "Pedro Santos",
+      "username": "pedro.santos"
+    },
+    {
+      "acao_id": 7,
+      "acao_nome": "TREINAMENTO EXTRA",
+      "celula": "CX | Voz | Pós Entrega",
+      "classificacao": "3M+",
+      "indicador": "MÚLTIPLOS",
+      "nome": "Maria Costa",
+      "username": "maria.costa"
+    },
+    {
+      "acao_id": 8,
+      "acao_nome": "LICENÇA MÉDICA | FÉRIAS | SALÁRIO FUNÇÃO",
+      "celula": "CX | Chat | Pedidos",
+      "classificacao": "3M",
+      "indicador": "MÚLTIPLOS",
+      "nome": "Carlos Souza",
+      "username": "carlos.souza"
+    }
+  ],
+  "supervisor": "janaina.david@ifood.com.br",
+  "token": "teste-token-123"
+}
