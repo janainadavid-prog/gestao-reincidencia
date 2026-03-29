@@ -136,7 +136,17 @@ function lerDados() {
   if (!hash) return null;
 
   try {
-    var dados = JSON.parse(atob(hash));
+    // ✅ Converte URL-safe base64 para base64 padrão antes do atob()
+    var standard = hash
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    // Adiciona padding se necessário
+    while (standard.length % 4 !== 0) {
+      standard += '=';
+    }
+
+    var dados = JSON.parse(atob(standard));
 
     // Verifica localStorage — já respondeu?
     var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
@@ -145,6 +155,7 @@ function lerDados() {
     }
 
     return dados;
+
   } catch(e) {
     console.error('Erro ao decodificar dados:', e);
     return null;
