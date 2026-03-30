@@ -1,0 +1,27 @@
+{
+  "campanha_id": "2026-03",
+  "mes": "03/2026",
+  "respondido_em": "30/03/2026, 17:36:20",
+  "selections": [
+    {
+      "acao_id": 2,
+      "acao_nome": "DESLIGAMENTO",
+      "celula": "Px Chat | Chat | Restaurante",
+      "classificacao": "SCORE IVY",
+      "indicador": "SCORE IVY",
+      "nome": "Abinaecia Da Silva Araujo",
+      "username": "6032143473"
+    },
+    {
+      "acao_id": 2,
+      "acao_nome": "DESLIGAMENTO",
+      "celula": "CX | Chat | P?s Entrega",
+      "classificacao": "SCORE IVY | QUALIDADE",
+      "indicador": "M?LTIPLOS",
+      "nome": "Abinael Leite Dos Santos",
+      "username": "9515590442"
+    }
+  ],
+  "supervisor": "a.izaura.bezerra@aec.com.br",
+  "token": "eyJzdXBlcnZpc29yIjoiYS5pemF1cmEuYmV6ZXJyYUBhZWMuY29tLmJyIiwiZW1haWwiOiJhLml6YXVyYS5iZXplcnJhQGFlYy5jb20uYnIiLCJjYW1wYW5oYV9pZCI6IjIwMjYtMDMiLCJleHAiOjE3NzU1MDAyNDAwMTh9.yZyIzZOyjlrgPw56CyAnlMCiYrx4_SVfhtLtM93sh98="
+}
