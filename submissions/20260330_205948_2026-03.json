@@ -1,0 +1,27 @@
+{
+  "campanha_id": "2026-03",
+  "mes": "03/2026",
+  "respondido_em": "30/03/2026, 17:59:39",
+  "selections": [
+    {
+      "acao_id": 8,
+      "acao_nome": "LICENÇA MÉDICA | FÉRIAS | SALÁRIO FUNÇÃO",
+      "celula": "CX | Chat | Problemas com entrega",
+      "classificacao": "CSAT | SCORE IVY",
+      "indicador": "M?LTIPLOS",
+      "nome": "Acrisio Mikael Barbosa Silva",
+      "username": "14069502467"
+    },
+    {
+      "acao_id": 1,
+      "acao_nome": "ACOMPANHAMENTO PRESENCIAL SUPERVISOR - CANCELAMENTO DE H.O",
+      "celula": "CX | Chat | P?s Entrega",
+      "classificacao": "CSAT",
+      "indicador": "CSAT",
+      "nome": "Acsa Maria De Souza Filgueira",
+      "username": "11121022480"
+    }
+  ],
+  "supervisor": "cynthia.brito@csu.com.br",
+  "token": "eyJzdXBlcnZpc29yIjoiY3ludGhpYS5icml0b0Bjc3UuY29tLmJyIiwiZW1haWwiOiJjeW50aGlhLmJyaXRvQGNzdS5jb20uYnIiLCJjYW1wYW5oYV9pZCI6IjIwMjYtMDMiLCJleHAiOjE3NzU1MDgwMTc4MDJ9.mpN9pSvYsl7M5Jeeim1Y-JUUdPjuN4YGyYevjYyveeM="
+}
