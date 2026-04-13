@@ -51,6 +51,12 @@
     .tela-central .icon { font-size: 72px; margin-bottom: 24px; }
     .tela-central h2 { font-size: 24px; color: #172b4d; margin-bottom: 12px; }
     .tela-central p { font-size: 15px; color: #5e6c84; line-height: 1.8; max-width: 460px; margin: 0 auto; }
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 10px; align-items: flex-start; }
+      .header-meta { flex-wrap: wrap; gap: 12px; }
+      .select-acao { min-width: 200px; }
+      td { font-size: 12px; padding: 10px 8px; }
+    }
   </style>
 </head>
 <body>
@@ -80,24 +86,13 @@
 
 <script>
 // =============================================
-// PAT encriptado com XOR
+// ⚙️ CONFIGURAÇÃO — URL DO APPS SCRIPT
 // =============================================
-function _dec(h, k) {
-  var r = "";
-  for (var i = 0; i < h.length; i += 2) {
-    r += String.fromCharCode(parseInt(h.substr(i, 2), 16) ^ k.charCodeAt((i/2) % k.length));
-  }
-  return r;
-}
+var WEBAPP_URL = "https://script.google.com/a/macros/ifood.com.br/s/AKfycbwPsUDyi45IICICA5kxBlnerhi1UhMVpkk6M1KFrNcT0gzYORZfmQJWoLciX1hXsl4/exec";
 
-// ✅ Credenciais Jira (XOR encoded)
-var _jiraEnc  = "363b333f325f1731156a2a485c0c010420161a2d2a081b5a3b27672b0d752e3647125a24155b37001f1a216228491c293d1e08055d020d5508571b167f5a4e41392226352d0819013e1a1505031b162960195b5f134e041c0237211b113f7c3634722e185f222820023c5f3f3a0620470a0d4a0d0637201d0343192938090f46725b164b5259312924561f242c0e5b0d22793c411a3c3c03372721183a01345b1b5e621c091a391b421124563c202e5d1c1a0646261e19572830224556425d51";
-var _jiraKey  = "workflows-lx-jira";
-var JIRA_TOKEN   = _dec(_jiraEnc, _jiraKey);
-var JIRA_EMAIL   = "janaina.david@ifood.com.br";
-var JIRA_DOMAIN  = "ifood.atlassian.net";
-var JIRA_PROJECT = "SWWORLX";
-
+// =============================================
+// AÇÕES DISPONÍVEIS
+// =============================================
 var ACOES = [
   { id: 0, nome: "— Selecione —" },
   { id: 1, nome: "ACOMPANHAMENTO PRESENCIAL SUPERVISOR - CANCELAMENTO DE H.O" },
@@ -110,7 +105,6 @@ var ACOES = [
   { id: 8, nome: "LICENÇA MÉDICA | FÉRIAS | SALÁRIO FUNÇÃO" },
   { id: 9, nome: "AGENTE NÃO É REINCIDENTE ( ABERTURA DE CHAMADO)" }
 ];
-
 
 var DADOS_INJETADOS = null;
 
@@ -134,65 +128,55 @@ function firstNameFromEmailOrName(s) {
 }
 
 // =============================================
-// ✅ LÊ DADOS DO HASH + VERIFICA SE JÁ RESPONDEU
+// LÊ DADOS DO URL + VERIFICA JÁ RESPONDEU
 // =============================================
 function lerDados() {
-  // ✅ Lê do parâmetro URL (mais confiável que hash em e-mails)
   var urlParams = new URLSearchParams(window.location.search);
   var encoded   = urlParams.get('d') || window.location.hash.replace('#', '');
-
   if (!encoded) return null;
 
   try {
-    // Converte URL-safe base64 para base64 padrão
     var standard = encoded.replace(/-/g, '+').replace(/_/g, '/');
     while (standard.length % 4 !== 0) { standard += '='; }
 
-    // ✅ Decodifica com suporte a UTF-8 (nomes com ã, ç, ê, etc.)
     var binaryStr = atob(standard);
     var text;
     try {
       var bytes = new Uint8Array(binaryStr.length);
-      for (var i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
+      for (var i = 0; i < binaryStr.length; i++) { bytes[i] = binaryStr.charCodeAt(i); }
       text = new TextDecoder('utf-8').decode(bytes);
     } catch(e) {
-      // Fallback para navegadores antigos
       text = decodeURIComponent(escape(binaryStr));
     }
 
     var dados = JSON.parse(text);
 
-    // ✅ Verifica se já respondeu (localStorage)
     var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
     if (tokensUsados.indexOf(dados.token) >= 0) {
       return { _jaRespondido: true, supervisor: dados.supervisor, mes: dados.mes };
     }
 
     return dados;
-
   } catch(e) {
-    console.error('Erro:', e);
+    console.error('Erro ao decodificar:', e);
     return null;
   }
 }
 
 // =============================================
-// ✅ RENDERIZA O FORMULÁRIO (ou telas especiais)
+// RENDERIZA FORMULÁRIO
 // =============================================
 function renderizarFormulario(dados) {
   document.getElementById("hdr-supervisor").textContent =
     firstNameFromEmailOrName((dados && dados.supervisor) || '') || '—';
-  document.getElementById("hdr-mes").textContent =
-    (dados && dados.mes) || '—';
+  document.getElementById("hdr-mes").textContent = (dados && dados.mes) || '—';
 
   if (!dados) {
     document.getElementById("hdr-pendencias").textContent = '0';
     document.getElementById("conteudo").innerHTML =
       '<div class="tela-central"><div class="icon">⚠️</div>' +
       '<h2>Link inválido</h2>' +
-      '<p>Solicite um novo envio ao responsável.</p></div>';
+      '<p>Este link não contém dados válidos.<br/>Solicite um novo envio ao responsável.</p></div>';
     return;
   }
 
@@ -201,18 +185,14 @@ function renderizarFormulario(dados) {
     document.getElementById("conteudo").innerHTML =
       '<div class="tela-central"><div class="icon">✅</div>' +
       '<h2>Sem pendências!</h2>' +
-      '<p>Você já registrou suas ações para este mês.<br/>' +
-      'Obrigado pela participação!</p></div>';
+      '<p>Você já registrou suas ações para este mês.<br/>Obrigado pela participação!</p></div>';
     return;
   }
 
   var grupos = {};
   dados.agentes.forEach(function(a) {
     var ind = a.indicador;
-    // ✅ Garante que agentes com indicador inválido vão para MÚLTIPLOS
-    if (!ind || ["CSAT","QUALIDADE","SCORE IVY","MÚLTIPLOS"].indexOf(ind) < 0) {
-      ind = 'MÚLTIPLOS';
-    }
+    if (!ind || ["CSAT","QUALIDADE","SCORE IVY","MÚLTIPLOS"].indexOf(ind) < 0) ind = 'MÚLTIPLOS';
     if (!grupos[ind]) grupos[ind] = [];
     grupos[ind].push(a);
   });
@@ -231,7 +211,6 @@ function renderizarFormulario(dados) {
     html += '<table><thead><tr><th>ANALISTA</th><th>CÉLULA</th><th>INDICADOR REINCIDENTE</th>';
     html += '<th>' + (indicador === "MÚLTIPLOS" ? "INDICADORES" : indicador) + '</th>';
     html += '<th style="min-width:300px">AÇÃO</th></tr></thead><tbody>';
-
     agentes.forEach(function(ag) {
       var tagClass     = ag.classificacao === "2M" ? "tag-2m" : ag.classificacao === "3M+" ? "tag-3m2" : "tag-3m";
       var val          = parseFloat(ag.metrica);
@@ -247,17 +226,12 @@ function renderizarFormulario(dados) {
   });
 
   document.getElementById("conteudo").innerHTML = html;
-
-  // ✅ Atualiza badge com total real exibido
   document.getElementById("hdr-pendencias").textContent = totalExibidos;
   document.getElementById("footer-total").textContent   = totalExibidos;
   document.getElementById("footer-bar").style.display   = "flex";
-
   atualizarContador();
 }
-// =============================================
-// CONTADOR DE PROGRESSO
-// =============================================
+
 function atualizarContador() {
   var selects = document.querySelectorAll(".select-acao");
   var prench  = 0;
@@ -267,7 +241,7 @@ function atualizarContador() {
 }
 
 // =============================================
-// ✅ VALIDAÇÃO E ENVIO (com localStorage)
+// ENVIO VIA APPS SCRIPT
 // =============================================
 function validarEnviar() {
   var selects = document.querySelectorAll(".select-acao");
@@ -293,9 +267,13 @@ function validarEnviar() {
     var acaoId = sel ? parseInt(sel.value) : 0;
     var acao   = ACOES.find(function(a) { return a.id === acaoId; });
     return {
-      username: ag.username, nome: ag.nome, celula: ag.celula,
-      indicador: ag.indicador, classificacao: ag.classificacao,
-      acao_id: acaoId, acao_nome: acao ? acao.nome : ""
+      username:      ag.username,
+      nome:          ag.nome,
+      celula:        ag.celula,
+      indicador:     ag.indicador,
+      classificacao: ag.classificacao,
+      acao_id:       acaoId,
+      acao_nome:     acao ? acao.nome : ""
     };
   });
 
@@ -308,42 +286,24 @@ function validarEnviar() {
     selections:    selections
   };
 
-  // ✅ Timeout de 15 segundos para não ficar travado
+  var payloadB64   = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  var urlFinal     = WEBAPP_URL + "?payload=" + encodeURIComponent(payloadB64);
+
   var timeoutId = setTimeout(function() {
     btn.textContent = "Enviar final";
     btn.disabled    = false;
-    alert("Tempo limite esgotado. Verifique sua conexão e tente novamente.");
-  }, 15000);
+    alert("Tempo limite esgotado. Tente novamente.");
+  }, 20000);
 
-  var jiraAuth = btoa(JIRA_EMAIL + ":" + JIRA_TOKEN);
-fetch("https://" + JIRA_DOMAIN + "/rest/api/3/issue", {
-  method: "POST",
-  headers: {
-    "Authorization": "Basic " + jiraAuth,
-    "Accept":        "application/json",
-    "Content-Type":  "application/json"
-  },
-  body: JSON.stringify({
-    fields: {
-      project:     { key: JIRA_PROJECT },
-      summary:     "[REINCIDENCIA] " + payload.campanha_id + " | " + payload.supervisor,
-      description: {
-        type: "doc", version: 1,
-        content: [{ type: "paragraph", content: [{ type: "text", text: JSON.stringify(payload) }] }]
-      },
-      issuetype: { name: "Task" }
-    }
-  })
-})
-.then(function(res) {
-  clearTimeout(timeoutId);
-  if (res.status === 201) {
-    
+  fetch(urlFinal, { method: "GET", mode: "no-cors" })
+    .then(function() {
+      clearTimeout(timeoutId);
+
       try {
-        var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
-        tokensUsados.push(DADOS_INJETADOS.token);
-        localStorage.setItem('reincidencia_tokens', JSON.stringify(tokensUsados));
-      } catch(e) { /* ignora erros de localStorage */ }
+        var tokens = JSON.parse(localStorage.getItem("reincidencia_tokens") || "[]");
+        tokens.push(DADOS_INJETADOS.token);
+        localStorage.setItem("reincidencia_tokens", JSON.stringify(tokens));
+      } catch(e) {}
 
       document.getElementById("conteudo").innerHTML =
         '<div class="tela-central"><div class="icon">✅</div>' +
@@ -352,26 +312,15 @@ fetch("https://" + JIRA_DOMAIN + "/rest/api/3/issue", {
         'Você já pode fechar esta página.</p></div>';
       document.getElementById("footer-bar").style.display = "none";
       document.getElementById("alerta").style.display     = "none";
-
-    } else {
-      // ✅ Mostra o erro real
+    })
+    .catch(function(err) {
+      clearTimeout(timeoutId);
       btn.textContent = "Enviar final";
       btn.disabled    = false;
-      res.text().then(function(body) {
-        alert("Erro ao enviar (HTTP " + res.status + "):\n" + body.substring(0, 300) +
-              "\n\nSe o erro for 401, o token expirou. Contate o suporte.");
-      }).catch(function() {
-        alert("Erro HTTP " + res.status + ". Tente novamente ou contate o suporte.");
-      });
-    }
-  })
-  .catch(function(err) {
-    clearTimeout(timeoutId);
-    btn.textContent = "Enviar final";
-    btn.disabled    = false;
-    alert("Erro de conexão: " + err.message);
-  });
+      alert("Erro de conexão: " + err.message);
+    });
 }
+
 // =============================================
 // INICIALIZAÇÃO
 // =============================================
