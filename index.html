@@ -285,6 +285,8 @@ function validarEnviar() {
 
   fetch("https://" + JIRA_DOMAIN + "/rest/api/3/issue", {
     method: "POST",
+     mode: "cors",        
+    credentials: "omit",  
     headers: {
       "Authorization": "Basic " + jiraAuth,
       "Accept":        "application/json",
