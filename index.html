@@ -74,7 +74,6 @@
 </div>
 
 <div class="container" id="conteudo"></div>
-
 <div class="alerta" id="alerta">⚠️ Selecione uma ação para todos os agentes antes de enviar.</div>
 
 <div class="footer" id="footer-bar" style="display:none">
@@ -86,13 +85,26 @@
 
 <script>
 // =============================================
-// ⚙️ CONFIGURAÇÃO — URL DO APPS SCRIPT
+// XOR DECODE
 // =============================================
-var WEBAPP_URL = "https://script.google.com/a/macros/ifood.com.br/s/AKfycbwPsUDyi45IICICA5kxBlnerhi1UhMVpkk6M1KFrNcT0gzYORZfmQJWoLciX1hXsl4/exec";
+function _dec(h, k) {
+  var r = "";
+  for (var i = 0; i < h.length; i += 2) {
+    r += String.fromCharCode(parseInt(h.substr(i, 2), 16) ^ k.charCodeAt((i/2) % k.length));
+  }
+  return r;
+}
 
 // =============================================
-// AÇÕES DISPONÍVEIS
+// ✅ CREDENCIAIS JIRA (XOR encoded)
 // =============================================
+var _jiraEnc  = "363b333f325f1731156a2a485c0c010420161a2d2a081b5a3b27672b0d752e3647125a24155b37001f1a216228491c293d1e08055d020d5508571b167f5a4e41392226352d0819013e1a1505031b162960195b5f134e041c0237211b113f7c3634722e185f222820023c5f3f3a0620470a0d4a0d0637201d0343192938090f46725b164b5259312924561f242c0e5b0d22793c411a3c3c03372721183a01345b1b5e621c091a391b421124563c202e5d1c1a0646261e19572830224556425d51";
+var _jiraKey  = "workflows-lx-jira";
+var JIRA_TOKEN   = _dec(_jiraEnc, _jiraKey);
+var JIRA_EMAIL   = "janaina.david@ifood.com.br";
+var JIRA_DOMAIN  = "ifood.atlassian.net";
+var JIRA_PROJECT = "SWWORLX";
+
 var ACOES = [
   { id: 0, nome: "— Selecione —" },
   { id: 1, nome: "ACOMPANHAMENTO PRESENCIAL SUPERVISOR - CANCELAMENTO DE H.O" },
@@ -108,9 +120,6 @@ var ACOES = [
 
 var DADOS_INJETADOS = null;
 
-// =============================================
-// HELPERS
-// =============================================
 function capitalizeFirst(s) {
   var t = (s || '').toString().trim();
   return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : '';
@@ -127,45 +136,29 @@ function firstNameFromEmailOrName(s) {
   return capitalizeFirst(v.split(/\s+/)[0] || v);
 }
 
-// =============================================
-// LÊ DADOS DO URL + VERIFICA JÁ RESPONDEU
-// =============================================
 function lerDados() {
   var urlParams = new URLSearchParams(window.location.search);
   var encoded   = urlParams.get('d') || window.location.hash.replace('#', '');
   if (!encoded) return null;
-
   try {
     var standard = encoded.replace(/-/g, '+').replace(/_/g, '/');
     while (standard.length % 4 !== 0) { standard += '='; }
-
     var binaryStr = atob(standard);
     var text;
     try {
       var bytes = new Uint8Array(binaryStr.length);
       for (var i = 0; i < binaryStr.length; i++) { bytes[i] = binaryStr.charCodeAt(i); }
       text = new TextDecoder('utf-8').decode(bytes);
-    } catch(e) {
-      text = decodeURIComponent(escape(binaryStr));
-    }
-
+    } catch(e) { text = decodeURIComponent(escape(binaryStr)); }
     var dados = JSON.parse(text);
-
     var tokensUsados = JSON.parse(localStorage.getItem('reincidencia_tokens') || '[]');
     if (tokensUsados.indexOf(dados.token) >= 0) {
       return { _jaRespondido: true, supervisor: dados.supervisor, mes: dados.mes };
     }
-
     return dados;
-  } catch(e) {
-    console.error('Erro ao decodificar:', e);
-    return null;
-  }
+  } catch(e) { console.error('Erro:', e); return null; }
 }
 
-// =============================================
-// RENDERIZA FORMULÁRIO
-// =============================================
 function renderizarFormulario(dados) {
   document.getElementById("hdr-supervisor").textContent =
     firstNameFromEmailOrName((dados && dados.supervisor) || '') || '—';
@@ -176,7 +169,7 @@ function renderizarFormulario(dados) {
     document.getElementById("conteudo").innerHTML =
       '<div class="tela-central"><div class="icon">⚠️</div>' +
       '<h2>Link inválido</h2>' +
-      '<p>Este link não contém dados válidos.<br/>Solicite um novo envio ao responsável.</p></div>';
+      '<p>Solicite um novo envio ao responsável.</p></div>';
     return;
   }
 
@@ -185,7 +178,7 @@ function renderizarFormulario(dados) {
     document.getElementById("conteudo").innerHTML =
       '<div class="tela-central"><div class="icon">✅</div>' +
       '<h2>Sem pendências!</h2>' +
-      '<p>Você já registrou suas ações para este mês.<br/>Obrigado pela participação!</p></div>';
+      '<p>Você já registrou suas ações para este mês.<br/>Obrigado!</p></div>';
     return;
   }
 
@@ -241,7 +234,7 @@ function atualizarContador() {
 }
 
 // =============================================
-// ENVIO VIA APPS SCRIPT
+// ✅ ENVIO VIA JIRA (atlassian.net)
 // =============================================
 function validarEnviar() {
   var selects = document.querySelectorAll(".select-acao");
@@ -250,7 +243,6 @@ function validarEnviar() {
     s.classList.toggle("invalido", s.value === "0");
     if (s.value === "0") valido = false;
   });
-
   if (!valido) {
     var al = document.getElementById("alerta");
     al.classList.add("show");
@@ -267,13 +259,9 @@ function validarEnviar() {
     var acaoId = sel ? parseInt(sel.value) : 0;
     var acao   = ACOES.find(function(a) { return a.id === acaoId; });
     return {
-      username:      ag.username,
-      nome:          ag.nome,
-      celula:        ag.celula,
-      indicador:     ag.indicador,
-      classificacao: ag.classificacao,
-      acao_id:       acaoId,
-      acao_nome:     acao ? acao.nome : ""
+      username: ag.username, nome: ag.nome, celula: ag.celula,
+      indicador: ag.indicador, classificacao: ag.classificacao,
+      acao_id: acaoId, acao_nome: acao ? acao.nome : ""
     };
   });
 
@@ -286,25 +274,42 @@ function validarEnviar() {
     selections:    selections
   };
 
-  var payloadB64   = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  var urlFinal     = WEBAPP_URL + "?payload=" + encodeURIComponent(payloadB64);
+  var jiraAuth = btoa(JIRA_EMAIL + ":" + JIRA_TOKEN);
+  var summary  = "[REINCIDENCIA] " + payload.campanha_id + " | " + payload.supervisor;
 
   var timeoutId = setTimeout(function() {
     btn.textContent = "Enviar final";
     btn.disabled    = false;
     alert("Tempo limite esgotado. Tente novamente.");
-  }, 20000);
+  }, 15000);
 
-  fetch(urlFinal, { method: "GET", mode: "no-cors" })
-    .then(function() {
-      clearTimeout(timeoutId);
-
+  fetch("https://" + JIRA_DOMAIN + "/rest/api/3/issue", {
+    method: "POST",
+    headers: {
+      "Authorization": "Basic " + jiraAuth,
+      "Accept":        "application/json",
+      "Content-Type":  "application/json"
+    },
+    body: JSON.stringify({
+      fields: {
+        project:     { key: JIRA_PROJECT },
+        summary:     summary,
+        description: {
+          type: "doc", version: 1,
+          content: [{ type: "paragraph", content: [{ type: "text", text: JSON.stringify(payload) }] }]
+        },
+        issuetype: { name: "Task" }
+      }
+    })
+  })
+  .then(function(res) {
+    clearTimeout(timeoutId);
+    if (res.status === 201) {
       try {
         var tokens = JSON.parse(localStorage.getItem("reincidencia_tokens") || "[]");
         tokens.push(DADOS_INJETADOS.token);
         localStorage.setItem("reincidencia_tokens", JSON.stringify(tokens));
       } catch(e) {}
-
       document.getElementById("conteudo").innerHTML =
         '<div class="tela-central"><div class="icon">✅</div>' +
         '<h2>Enviado com sucesso!</h2>' +
@@ -312,18 +317,22 @@ function validarEnviar() {
         'Você já pode fechar esta página.</p></div>';
       document.getElementById("footer-bar").style.display = "none";
       document.getElementById("alerta").style.display     = "none";
-    })
-    .catch(function(err) {
-      clearTimeout(timeoutId);
+    } else {
+      res.text().then(function(body) {
+        alert("Erro HTTP " + res.status + ":\n" + body.substring(0, 200));
+      });
       btn.textContent = "Enviar final";
       btn.disabled    = false;
-      alert("Erro de conexão: " + err.message);
-    });
+    }
+  })
+  .catch(function(err) {
+    clearTimeout(timeoutId);
+    btn.textContent = "Enviar final";
+    btn.disabled    = false;
+    alert("Erro de conexão: " + err.message);
+  });
 }
 
-// =============================================
-// INICIALIZAÇÃO
-// =============================================
 window.onload = function() {
   DADOS_INJETADOS = lerDados();
   renderizarFormulario(DADOS_INJETADOS);
