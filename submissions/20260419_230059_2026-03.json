@@ -1,0 +1,36 @@
+{
+  "campanha_id": "2026-03",
+  "mes": "04/2026",
+  "respondido_em": "19/04/2026, 20:00:41",
+  "selections": [
+    {
+      "acao_id": 1,
+      "acao_nome": "ACOMPANHAMENTO PRESENCIAL SUPERVISOR - CANCELAMENTO DE H.O",
+      "celula": "Px Chat | Chat | Restaurante",
+      "classificacao": "SCORE IVY",
+      "indicador": "SCORE IVY",
+      "nome": "Abinaecia Da Silva Araujo",
+      "username": "6032143473"
+    },
+    {
+      "acao_id": 7,
+      "acao_nome": "TREINAMENTO EXTRA",
+      "celula": "CX | Chat | P?s Entrega",
+      "classificacao": "SCORE IVY | QUALIDADE",
+      "indicador": "M?LTIPLOS",
+      "nome": "Abinael Leite Dos Santos",
+      "username": "9515590442"
+    },
+    {
+      "acao_id": 8,
+      "acao_nome": "LICENÇA MÉDICA | FÉRIAS | SALÁRIO FUNÇÃO",
+      "celula": "CX | Chat | Problemas com entrega",
+      "classificacao": "CSAT | SCORE IVY",
+      "indicador": "M?LTIPLOS",
+      "nome": "Acrisio Mikael Barbosa Silva",
+      "username": "14069502467"
+    }
+  ],
+  "supervisor": "janaina.david@ifood.com.br",
+  "token": "eyJzdXBlcnZpc29yIjoiamFuYWluYS5kYXZpZEBpZm9vZC5jb20uYnIiLCJlbWFpbCI6ImphbmFpbmEuZGF2aWRAaWZvb2QuY29tLmJyIiwiY2FtcGFuaGFfaWQiOiIyMDI2LTAzIiwiZXhwIjoxNzc3MjQ0NDMxNjE4fQ==.NbB_v2q8rqdBpR8Zc5HeYkmfO5MxIoW8Rr2K0n7UoAk="
+}
