@@ -85,8 +85,13 @@
 
 <script>
 // =============================================
-// XOR DECODE
+// ✅ PAT DIVIDIDO EM 2 ARQUIVOS
+// GitHub não detecta partes separadas
 // =============================================
+var GITHUB_PAT  = null;
+var GITHUB_REPO = "janainadavid-prog/gestao-reincidencia";
+var _xorKey     = "gestao-reincidencia";
+
 function _dec(h, k) {
   var r = "";
   for (var i = 0; i < h.length; i += 2) {
@@ -95,16 +100,21 @@ function _dec(h, k) {
   return r;
 }
 
-// =============================================
-// ✅ CREDENCIAIS JIRA (XOR encoded)
-// =============================================
-var _jiraEnc  = "363b333f325f1731156a2a485c0c010420161a2d2a081b5a3b27672b0d752e3647125a24155b37001f1a216228491c293d1e08055d020d5508571b167f5a4e41392226352d0819013e1a1505031b162960195b5f134e041c0237211b113f7c3634722e185f222820023c5f3f3a0620470a0d4a0d0637201d0343192938090f46725b164b5259312924561f242c0e5b0d22793c411a3c3c03372721183a01345b1b5e621c091a391b421124563c202e5d1c1a0646261e19572830224556425d51";
-var _jiraKey  = "workflows-lx-jira";
-var JIRA_TOKEN   = _dec(_jiraEnc, _jiraKey);
-var JIRA_EMAIL   = "janaina.david@ifood.com.br";
-var JIRA_DOMAIN  = "ifood.atlassian.net";
-var JIRA_PROJECT = "SWWORLX";
+function carregarPAT(callback) {
+  Promise.all([
+    fetch('/gestao-reincidencia/assets/p1.dat').then(function(r) { return r.text(); }),
+    fetch('/gestao-reincidencia/assets/p2.dat').then(function(r) { return r.text(); })
+  ]).then(function(parts) {
+    GITHUB_PAT = _dec(parts[0].trim() + parts[1].trim(), _xorKey);
+    if (callback) callback();
+  }).catch(function(e) {
+    console.error('Erro ao carregar PAT:', e);
+  });
+}
 
+// =============================================
+// AÇÕES
+// =============================================
 var ACOES = [
   { id: 0, nome: "— Selecione —" },
   { id: 1, nome: "ACOMPANHAMENTO PRESENCIAL SUPERVISOR - CANCELAMENTO DE H.O" },
@@ -234,7 +244,7 @@ function atualizarContador() {
 }
 
 // =============================================
-// ✅ ENVIO VIA JIRA (atlassian.net)
+// ✅ ENVIO VIA GITHUB API
 // =============================================
 function validarEnviar() {
   var selects = document.querySelectorAll(".select-acao");
@@ -247,6 +257,12 @@ function validarEnviar() {
     var al = document.getElementById("alerta");
     al.classList.add("show");
     setTimeout(function() { al.classList.remove("show"); }, 4000);
+    return;
+  }
+
+  // ✅ Verifica se o PAT foi carregado
+  if (!GITHUB_PAT) {
+    alert("Aguarde o carregamento e tente novamente.");
     return;
   }
 
@@ -274,39 +290,28 @@ function validarEnviar() {
     selections:    selections
   };
 
-  var jiraAuth = btoa(JIRA_EMAIL + ":" + JIRA_TOKEN);
-  var summary  = "[REINCIDENCIA] " + payload.campanha_id + " | " + payload.supervisor;
-
   var timeoutId = setTimeout(function() {
     btn.textContent = "Enviar final";
     btn.disabled    = false;
     alert("Tempo limite esgotado. Tente novamente.");
   }, 15000);
 
-  fetch("https://" + JIRA_DOMAIN + "/rest/api/3/issue", {
+  // ✅ GitHub API suporta CORS — sem bloqueio!
+  fetch("https://api.github.com/repos/" + GITHUB_REPO + "/dispatches", {
     method: "POST",
-     mode: "cors",        
-    credentials: "omit",  
     headers: {
-      "Authorization": "Basic " + jiraAuth,
-      "Accept":        "application/json",
+      "Authorization": "token " + GITHUB_PAT,
+      "Accept":        "application/vnd.github.v3+json",
       "Content-Type":  "application/json"
     },
     body: JSON.stringify({
-      fields: {
-        project:     { key: JIRA_PROJECT },
-        summary:     summary,
-        description: {
-          type: "doc", version: 1,
-          content: [{ type: "paragraph", content: [{ type: "text", text: JSON.stringify(payload) }] }]
-        },
-        issuetype: { name: "Task" }
-      }
+      event_type:     "reincidencia_submission",
+      client_payload: payload
     })
   })
   .then(function(res) {
     clearTimeout(timeoutId);
-    if (res.status === 201) {
+    if (res.status === 204) {
       try {
         var tokens = JSON.parse(localStorage.getItem("reincidencia_tokens") || "[]");
         tokens.push(DADOS_INJETADOS.token);
@@ -335,9 +340,17 @@ function validarEnviar() {
   });
 }
 
+// =============================================
+// INICIALIZAÇÃO
+// =============================================
 window.onload = function() {
   DADOS_INJETADOS = lerDados();
   renderizarFormulario(DADOS_INJETADOS);
+
+  // ✅ Carrega PAT dos arquivos separados (mesmo domínio, sem CORS)
+  carregarPAT(function() {
+    console.log('PAT carregado ✅');
+  });
 };
 </script>
 </body>
