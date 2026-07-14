@@ -1,0 +1,36 @@
+{
+  "campanha_id": "2026-07",
+  "mes": "07/2026",
+  "respondido_em": "14/07/2026, 16:06:41",
+  "selections": [
+    {
+      "acao_id": 3,
+      "acao_nome": "FEEDBACK COM ACOMPANHAMENTO",
+      "celula": "Px Chat | Chat | Restaurante",
+      "classificacao": "SCORE IVY",
+      "indicador": "SCORE IVY",
+      "nome": "Abinaecia Da Silva Araujo",
+      "username": "6032143473"
+    },
+    {
+      "acao_id": 8,
+      "acao_nome": "LICENÇA MÉDICA | FÉRIAS | SALÁRIO FUNÇÃO",
+      "celula": "CX | Chat | P?s Entrega",
+      "classificacao": "SCORE IVY | QUALIDADE",
+      "indicador": "M?LTIPLOS",
+      "nome": "Abinael Leite Dos Santos",
+      "username": "9515590442"
+    },
+    {
+      "acao_id": 6,
+      "acao_nome": "REALOCAR PARA OUTRA FORA DO PRODUTO IFOOD",
+      "celula": "CX | Chat | Problemas com entrega",
+      "classificacao": "CSAT | SCORE IVY",
+      "indicador": "M?LTIPLOS",
+      "nome": "Acrisio Mikael Barbosa Silva",
+      "username": "14069502467"
+    }
+  ],
+  "supervisor": "janaina.david@ifood.com.br",
+  "token": "eyJzdXBlcnZpc29yIjoiamFuYWluYS5kYXZpZEBpZm9vZC5jb20uYnIiLCJlbWFpbCI6ImphbmFpbmEuZGF2aWRAaWZvb2QuY29tLmJyIiwiY2FtcGFuaGFfaWQiOiIyMDI2LTA3IiwiZXhwIjoxNzg0MjAxNjcwNTIyfQ==.a4YgXFJ_ylQGcGE9EUskqdM9hlebqd92xQ9eb-fLkTs="
+}
